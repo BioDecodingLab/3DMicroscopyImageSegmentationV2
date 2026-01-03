@@ -197,9 +197,16 @@ class DatasetPaths:
     def validate_for_training(self) -> None:
         """Check required directories exist for training."""
         patches_images = self.training_regular_patches / "images"
+        patches_masks = self.training_regular_patches / "masks"
+
         if not patches_images.exists() or not any(patches_images.iterdir()):
             raise FileNotFoundError(
-                f"No patches found. Run patch generation first: {patches_images}"
+                f"No image patches found. Run patch generation first: {patches_images}"
+            )
+
+        if not patches_masks.exists() or not any(patches_masks.iterdir()):
+            raise FileNotFoundError(
+                f"No mask patches found. Run patch generation first: {patches_masks}"
             )
 
     def validate_for_inference(self) -> None:
