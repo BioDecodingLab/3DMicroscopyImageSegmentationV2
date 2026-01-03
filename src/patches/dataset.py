@@ -11,83 +11,69 @@ from src.config import (
 )
 from src.utils import overwrite_and_create_directory
 
-from .utils import (
-    create_and_save_patches_from_image_and_mask,
-    validate_mask,
-)
+from .utils import create_and_save_patches_from_image_and_mask
 
 
-class Dataset:
+def generate_patches(
+    images_dir: Path,
+    masks_dir: Path,
+    output_dir: Path,
+    for_reconstruction: bool,
+) -> None:
+    """Generate patches from images and masks.
+
+    Args:
+        images_dir: Directory containing source images
+        masks_dir: Directory containing corresponding masks
+        output_dir: Directory to write patches (e.g., regular_patches or reconstruction_patches)
+        for_reconstruction: If True, pad images for reconstruction
+
+    Note: Validation should be done via DatasetPaths.validate_for_patches() before calling.
     """
-    Given a datset_folder, an output_folder and whether or not it is for reconstruction to add padding, it returns a new dataset that consists of volumnes.
+    # Create output directory structure; if it exists, delete it
+    overwrite_and_create_directory(output_dir)
 
-    Therefore, ALL THE FUNCTIONS FOR INFERENCE, TRAINING ARE BASED ON 3D IMAGES.
-    """
+    patches_images_dir = output_dir / "images"
+    patches_masks_dir = output_dir / "masks"
+    overwrite_and_create_directory(patches_images_dir)
+    overwrite_and_create_directory(patches_masks_dir)
 
-    def __init__(
-        self, dataset_folder: Path, for_reconstruction: bool, output_dir: Path = "patches"
-    ) -> None:
-        images_dir = dataset_folder / "images"
-        masks_dir = dataset_folder / "masks"
-        self.for_reconstruction = for_reconstruction
+    # Get corresponding pairs of images and masks
+    image_mask_pairs = [
+        (image, masks_dir / image.name)
+        for image in images_dir.glob("*")
+        if image.suffix.lower() in ALLOWED_EXTENSIONS
+    ]
 
-        # Ensure that folder has images and masks folders
-        if not (images_dir.is_dir() and masks_dir.is_dir()):
-            raise Exception(f"No images or masks folder found  in {dataset_folder}")
+    for image_path, mask_path in tqdm(image_mask_pairs, desc="Processing images"):
+        try:
+            image = tifffile.imread(str(image_path))
+            mask = tifffile.imread(str(mask_path))
 
-        # Define a prefix to distinguish regular and reconstruction patches
-        prefix = "regular" if not for_reconstruction else "reconstruction"
-
-        # Create patches dir; if it exists, delete it
-        patches_dir = dataset_folder / f"{prefix}_{output_dir}"
-        overwrite_and_create_directory(patches_dir)
-
-        # Create directory for patches from images folder and masks folder
-        self.patches_images_dir = patches_dir / "images"
-        self.patches_masks_dir = patches_dir / "masks"
-        overwrite_and_create_directory(self.patches_images_dir)
-        overwrite_and_create_directory(self.patches_masks_dir)
-
-        # Get corresponding pairs of images and masks and create a generator
-        self.image_mask_path_generator = (
-            (image, masks_dir / image.name)
-            for image in images_dir.glob("*")
-            if image.suffix.lower() in ALLOWED_EXTENSIONS
-            if validate_mask(image, masks_dir / image.name)
-        )
-
-    def create_patch_dataset(self):
-        for image_path, mask_path in tqdm(
-            self.image_mask_path_generator, desc="Proccessing images", position=0
-        ):
-            try:
-                image = tifffile.imread(str(image_path))
-                mask = tifffile.imread(str(mask_path))
-
-                # Verify 3D dimensions
-                if len(image.shape) != 3 or len(mask.shape) != 3:
-                    raise Exception(
-                        f"Check your dataset. Expected 3D image {image.name} but got shape {image.shape}"
-                    )
-
-                # Create output directories to store the patches of a single image and its corresponding mask
-                dir_to_store_patches_for_single_image = self.patches_images_dir / image_path.name
-                dir_to_store_patches_for_single_mask = self.patches_masks_dir / image_path.name
-
-                overwrite_and_create_directory(dir_to_store_patches_for_single_image)
-                overwrite_and_create_directory(dir_to_store_patches_for_single_mask)
-
-                create_and_save_patches_from_image_and_mask(
-                    image_path,
-                    image,
-                    mask,
-                    PATCH_SIZE,
-                    PATCH_STEP,
-                    dir_to_store_patches_for_single_image,
-                    dir_to_store_patches_for_single_mask,
-                    self.for_reconstruction,
-                    MAX_WORKERS,
+            # Verify 3D dimensions
+            if len(image.shape) != 3 or len(mask.shape) != 3:
+                raise ValueError(
+                    f"Expected 3D image but got shape {image.shape} for {image_path.name}"
                 )
 
-            except Exception as e:
-                raise Exception(f"Failed to save patches for image-mask pair {image_path}: {e}")
+            # Create output directories for patches of this image
+            image_patches_dir = patches_images_dir / image_path.name
+            mask_patches_dir = patches_masks_dir / image_path.name
+
+            overwrite_and_create_directory(image_patches_dir)
+            overwrite_and_create_directory(mask_patches_dir)
+
+            create_and_save_patches_from_image_and_mask(
+                image_path,
+                image,
+                mask,
+                PATCH_SIZE,
+                PATCH_STEP,
+                image_patches_dir,
+                mask_patches_dir,
+                for_reconstruction,
+                MAX_WORKERS,
+            )
+
+        except Exception as e:
+            raise RuntimeError(f"Failed to generate patches for {image_path}: {e}") from e

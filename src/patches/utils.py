@@ -9,13 +9,6 @@ from patchify import patchify
 import tifffile
 
 
-def validate_mask(image_path: Path, mask_path: Path) -> bool:
-    if not mask_path.exists():
-        logger.warning(f"No corresponding mask for image {image_path}. Skipping image")
-        return False
-    return True
-
-
 def calculate_padding(
     image_shape: Tuple[int, int, int], patch_size: Tuple[int, int, int], step_size: int
 ) -> Tuple[Tuple[int, int], Tuple[int, int], Tuple[int, int]]:
