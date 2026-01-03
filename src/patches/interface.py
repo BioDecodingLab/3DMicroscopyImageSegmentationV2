@@ -5,7 +5,7 @@ from typing_extensions import Annotated
 
 from src.dataset_paths import DatasetPaths
 
-from .dataset import generate_patches
+from .utils import generate_patches
 
 
 def interface(
