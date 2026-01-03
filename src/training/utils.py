@@ -85,12 +85,12 @@ def get_patch_paths_for_training(
     images_dir = patches_dir / "images"
     masks_dir = patches_dir / "masks"
 
-    # Collect paths for all allowed extensions
+    # Collect paths for all allowed extensions (files only, not directories)
     image_paths = []
     mask_paths = []
     for ext in ALLOWED_EXTENSIONS:
-        image_paths.extend(images_dir.rglob(f"*{ext}"))
-        mask_paths.extend(masks_dir.rglob(f"*{ext}"))
+        image_paths.extend(f for f in images_dir.rglob(f"*{ext}") if f.is_file())
+        mask_paths.extend(f for f in masks_dir.rglob(f"*{ext}") if f.is_file())
 
     image_paths = sorted(image_paths)
     mask_paths = sorted(mask_paths)
