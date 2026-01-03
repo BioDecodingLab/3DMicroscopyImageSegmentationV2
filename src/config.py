@@ -4,7 +4,7 @@ OUTPUT_EXTENSION = ".tif"
 
 # Patch configuration
 PATCH_SIZE = (64, 64, 64)
-PATCH_STEP = 64
+PATCH_STEP = (64, 64, 64)
 
 MAX_WORKERS = 16  # Number of cores used in multiprocessing tasks
 THRESHOLD = 0.5  # Thresholding for
