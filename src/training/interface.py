@@ -31,12 +31,8 @@ configure_gpu()
 def interface(
     dataset_path: Annotated[Path, typer.Argument(help="Path to dataset root")],
     model_name: Annotated[str, typer.Argument(help="Model: UNet3D or AttentionUNet3D")],
-    augmentation: Annotated[
-        str, typer.Argument(help="Augmentation: NONE, STANDARD, or OURS")
-    ],
-    psf_path: Annotated[
-        Path, typer.Option(help="Path to PSF file for OURS augmentation")
-    ] = None,
+    augmentation: Annotated[str, typer.Argument(help="Augmentation: NONE, STANDARD, or OURS")],
+    psf_path: Annotated[Path, typer.Option(help="Path to PSF file for OURS augmentation")] = None,
     reproducibility: Annotated[
         bool, typer.Option(help="Enable reproducibility by setting random seed")
     ] = True,

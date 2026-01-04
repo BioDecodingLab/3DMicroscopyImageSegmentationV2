@@ -164,9 +164,7 @@ class DatasetPaths:
             raise FileNotFoundError(f"Masks directory missing: {masks_dir}")
 
         # Get images with valid extensions
-        images = [
-            f for f in images_dir.iterdir() if f.suffix.lower() in ALLOWED_EXTENSIONS
-        ]
+        images = [f for f in images_dir.iterdir() if f.suffix.lower() in ALLOWED_EXTENSIONS]
 
         if not images:
             raise FileNotFoundError(

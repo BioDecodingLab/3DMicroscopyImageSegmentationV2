@@ -135,9 +135,7 @@ def run_plotting(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Build lookup dict for ground truth patches
-    patches_dict = {
-        p.stem: p for p in ground_truth_patches_dir.rglob(f"*{OUTPUT_EXTENSION}")
-    }
+    patches_dict = {p.stem: p for p in ground_truth_patches_dir.rglob(f"*{OUTPUT_EXTENSION}")}
 
     # Plot patch-level metrics
     logger.info("Computing patch-level metrics...")

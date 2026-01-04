@@ -96,13 +96,9 @@ def get_patch_paths_for_training(
     mask_paths = sorted(mask_paths)
 
     if not image_paths:
-        raise ValueError(
-            f"No files with extensions {ALLOWED_EXTENSIONS} found in {images_dir}"
-        )
+        raise ValueError(f"No files with extensions {ALLOWED_EXTENSIONS} found in {images_dir}")
     if not mask_paths:
-        raise ValueError(
-            f"No files with extensions {ALLOWED_EXTENSIONS} found in {masks_dir}"
-        )
+        raise ValueError(f"No files with extensions {ALLOWED_EXTENSIONS} found in {masks_dir}")
 
     if len(image_paths) != len(mask_paths):
         raise ValueError(
