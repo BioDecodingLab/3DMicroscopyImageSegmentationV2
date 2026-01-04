@@ -1,5 +1,8 @@
 # 3D Microscopy Image Segmentation (V2)
 
+![Python](https://img.shields.io/badge/Python-3.10-blue)
+![License](https://img.shields.io/badge/License-GPL--3.0-green)
+
 Deep learning segmentation of tubular structures in 3D microscopy images.
 
 **Paper**: [An Open-Source Protocol for Deep Learning-Based Segmentation of Tubular Structures](https://app.jove.com/t/68004)
