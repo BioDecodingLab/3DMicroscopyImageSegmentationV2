@@ -1,12 +1,15 @@
+import concurrent.futures
 from pathlib import Path
 from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from loguru import logger
 from sklearn.metrics import accuracy_score, f1_score, jaccard_score, precision_score, recall_score
 from tifffile import tifffile
 
+from src.config import AVAILABLE_METRICS, MAX_WORKERS, OUTPUT_EXTENSION
 from src.inference.utils import apply_threshold_to_image_and_convert_to_dtype
 
 
@@ -110,3 +113,83 @@ def plot_metrics_boxplots(df, save_path=None):
         plt.savefig(save_path, dpi=300, bbox_inches="tight")
     else:
         plt.show()
+
+
+def run_plotting(
+    predictions_patch_level: Path,
+    predictions_image_level: Path,
+    ground_truth_patches_dir: Path,
+    ground_truth_masks_dir: Path,
+    output_dir: Path,
+) -> None:
+    """Generate evaluation plots for all prediction methods.
+
+    Args:
+        predictions_patch_level: Directory with patch-level predictions
+        predictions_image_level: Directory with image-level predictions
+        ground_truth_patches_dir: Directory with ground truth mask patches
+        ground_truth_masks_dir: Directory with complete ground truth masks
+        output_dir: Directory to save plot figures
+    """
+    # Create output directory
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Build lookup dict for ground truth patches
+    patches_dict = {
+        p.stem: p for p in ground_truth_patches_dir.rglob(f"*{OUTPUT_EXTENSION}")
+    }
+
+    # Plot patch-level metrics
+    logger.info("Computing patch-level metrics...")
+    patch_results = []
+    for method in predictions_patch_level.glob("*"):
+        if not method.is_dir():
+            continue
+        with concurrent.futures.ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            futures = [
+                executor.submit(
+                    read_and_compute_metrics,
+                    image_path,
+                    patches_dict[image_path.stem],
+                    AVAILABLE_METRICS,
+                )
+                for image_path in method.glob("*")
+                if image_path.stem in patches_dict
+            ]
+
+            for future in concurrent.futures.as_completed(futures):
+                result = future.result()
+                result["method"] = method.stem
+                patch_results.append(result)
+
+    if patch_results:
+        df = results_to_dataframe(patch_results)
+        plot_metrics_boxplots(df, output_dir / "metrics_patches.png")
+        logger.info(f"Saved patch-level plot to {output_dir / 'metrics_patches.png'}")
+
+    # Plot image-level metrics
+    logger.info("Computing image-level metrics...")
+    image_results = []
+    for method in predictions_image_level.glob("*"):
+        if not method.is_dir():
+            continue
+        with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
+            futures = [
+                executor.submit(
+                    read_and_compute_metrics,
+                    image_path,
+                    ground_truth_masks_dir / image_path.name,
+                    AVAILABLE_METRICS,
+                )
+                for image_path in method.glob("*")
+            ]
+
+            for future in concurrent.futures.as_completed(futures):
+                result = future.result()
+                result["method"] = method.stem
+                image_results.append(result)
+
+    if image_results:
+        df = results_to_dataframe(image_results)
+        plot_metrics_boxplots(df, output_dir / "metrics_images.png")
+        logger.info(f"Saved image-level plot to {output_dir / 'metrics_images.png'}")

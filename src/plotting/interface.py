@@ -3,35 +3,30 @@ from typing import Annotated
 
 import typer
 
-from src.plotting.plot import Plotter
+from src.dataset_paths import DatasetPaths
+from src.plotting.utils import run_plotting
 
 
 def interface(
-    predictions_dir: Annotated[
-        Path,
-        typer.Argument(help="Directory containing the image_level and patch_level predictions"),
-    ],
-    ground_truth_mask_patches_dir: Annotated[
-        Path,
-        typer.Argument(
-            help="Directory containing ground truth patches of masks (reconstruction patches from masks folder)"
-        ),
-    ],
-    ground_truth_masks_dir: Annotated[
-        Path, typer.Argument(help="Directory containing the ground truth masks of complete images")
-    ],
-    dataset_name: Annotated[str, typer.Argument(help="Name of the dataset")],
-    output_dir: Annotated[Path, typer.Argument(help="Directory to save patches")],
+    dataset_path: Annotated[Path, typer.Argument(help="Path to dataset root")],
 ):
-    plotter = Plotter(
-        predictions_dir,
-        ground_truth_mask_patches_dir,
-        ground_truth_masks_dir,
-        dataset_name,
-        output_dir,
-    )
+    """Generate evaluation plots comparing segmentation methods.
 
-    plotter.plot_images_metrics()
+    Computes metrics (accuracy, precision, recall, dice, etc.) for all
+    predictions and generates boxplot visualizations.
+    """
+    paths = DatasetPaths(dataset_path)
+    paths.validate_for_plotting()
+
+    typer.echo("Generating evaluation plots...")
+    run_plotting(
+        predictions_patch_level=paths.predictions_patch_level,
+        predictions_image_level=paths.predictions_image_level,
+        ground_truth_patches_dir=paths.test_reconstruction_patches / "masks",
+        ground_truth_masks_dir=paths.test_masks,
+        output_dir=paths.figures,
+    )
+    typer.echo("Plotting complete!")
 
 
 if __name__ == "__main__":

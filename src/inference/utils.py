@@ -14,7 +14,15 @@ from skimage.filters import frangi
 import tensorflow
 import tifffile
 
-from src.utils import create_directory
+from src.config import (
+    AVAILABLE_AUGMENTATIONS,
+    AVAILABLE_CLASSICAL_METHODS,
+    AVAILABLE_MODELS,
+    BATCH_SIZE,
+    MAX_WORKERS,
+    PATCH_SIZE,
+)
+from src.utils import create_directory, overwrite_and_create_directory
 
 
 @dataclass
@@ -195,27 +203,26 @@ def get_deep_learning_models_from_dir(
     for model_dir in models_dir.glob("*/"):
         model_name, model_augmentation = extract_information_from_model_dir_path(model_dir)
 
-        # Get timestamp directories within model_dir\
-        timestamps = model_dir.glob("*/")
+        # Get timestamp directories within model_dir
+        timestamps = list(model_dir.glob("*/"))
 
         if not timestamps:
             raise Exception(f"No timestamp directories in {model_dir}")
 
         # Get most recent timestamp directory
-        latest_timestamp_model = sorted(timestamps, key=lambda dir: dir.name)[-1]
+        latest_timestamp_model = sorted(timestamps, key=lambda d: d.name)[-1]
 
         # Get model files and check there's at least one .h5 model
-        model_files = latest_timestamp_model.glob("*.h5")
+        model_files = list(latest_timestamp_model.glob("*.h5"))
         if not model_files:
             raise Exception(f"No .h5 model files in {latest_timestamp_model}")
 
-        logger.info(f"Found {model_name}_{model_augmentation} in {model_files.name}")
-
-        best_model_path = next(model_files, None)
+        best_model_path = model_files[0]
+        logger.info(f"Found {model_name}_{model_augmentation} at {best_model_path}")
 
         models_list.append((model_name, model_augmentation, best_model_path))
 
-        return models_list
+    return models_list
 
 
 def apply_deep_learning_model_to_batch(batch: list[NDArray], model, threshold: int) -> NDArray:
@@ -336,3 +343,78 @@ def apply_deep_learning_method_to_array_of_filenames(
     )
 
     save_mask_in_disk(reconstructed_image, output_filename)
+
+
+def run_inference(
+    patches_dir: Path,
+    images_dir: Path,
+    models_dir: Path,
+    predictions_patch_level: Path,
+    predictions_image_level: Path,
+) -> None:
+    """Run inference on patches using classical and deep learning methods.
+
+    Args:
+        patches_dir: Directory with reconstruction patches (nested by image name)
+        images_dir: Directory with complete test images
+        models_dir: Directory with trained models
+        predictions_patch_level: Output directory for patch predictions
+        predictions_image_level: Output directory for reconstructed image predictions
+    """
+    # Create output directories
+    overwrite_and_create_directory(predictions_patch_level)
+    overwrite_and_create_directory(predictions_image_level)
+
+    # Get subdirectories corresponding to image names (each contains patches for one image)
+    image_subdirs = sorted([d for d in patches_dir.glob("*/") if d.is_dir()])
+
+    if not image_subdirs:
+        raise ValueError(f"No image subdirectories found in {patches_dir}")
+
+    # Get deep learning models
+    models_list = get_deep_learning_models_from_dir(
+        models_dir, AVAILABLE_MODELS, AVAILABLE_AUGMENTATIONS
+    )
+
+    for subdir in image_subdirs:
+        # Get patches for this image, sorted by patch ID
+        image_patches_paths = sorted(
+            subdir.glob("*"),
+            key=lambda filename: extract_patch_info_from_path(filename).patch_id,
+        )
+
+        # Get the corresponding complete image
+        complete_image_path = images_dir / subdir.name
+
+        # Apply classical thresholding methods
+        logger.info(f"Applying classical methods to {subdir.name}...")
+        for method in AVAILABLE_CLASSICAL_METHODS:
+            # Patch-level predictions
+            apply_classical_thresholding_and_save_masks_for_array_of_filenames(
+                image_patches_paths,
+                predictions_patch_level,
+                method,
+                MAX_WORKERS,
+            )
+            # Image-level predictions
+            apply_classical_thresholding_and_save_masks_for_array_of_filenames(
+                [complete_image_path],
+                predictions_image_level,
+                method,
+                MAX_WORKERS,
+            )
+
+        # Apply deep learning methods
+        logger.info(f"Applying deep learning methods to {subdir.name}...")
+        for model_name, augmentation, best_model_path in models_list:
+            apply_deep_learning_method_to_array_of_filenames(
+                image_patches_paths,
+                predictions_patch_level,
+                predictions_image_level,
+                model_name,
+                augmentation,
+                best_model_path,
+                BATCH_SIZE,
+                PATCH_SIZE,
+                MAX_WORKERS,
+            )

@@ -3,22 +3,30 @@ from typing import Annotated
 
 import typer
 
-from src.inference.predict import Prediction
+from src.dataset_paths import DatasetPaths
+from src.inference.utils import run_inference
 
 
 def interface(
-    patches_dir: Annotated[Path, typer.Argument(help="Directory containing image patches")],
-    images_dir: Annotated[Path, typer.Argument(help="Directory containing complete images")],
-    dataset_name: Annotated[
-        str,
-        typer.Argument(
-            help="Identifier/name to distinguish different predictions from different datasts. All prediction from a dataset will be saved here"
-        ),
-    ],
-    models_dir: Annotated[Path, typer.Argument(help="Path to models' folder")],
-    output_dir: Annotated[Path, typer.Argument(help="Directory to save predictions")],
+    dataset_path: Annotated[Path, typer.Argument(help="Path to dataset root")],
 ):
-    Prediction(patches_dir, images_dir, output_dir, dataset_name, models_dir).predict()
+    """Run inference on test data using trained models.
+
+    Applies both classical methods (otsu, frangi, etc.) and deep learning models
+    to generate segmentation predictions at patch-level and image-level.
+    """
+    paths = DatasetPaths(dataset_path)
+    paths.validate_for_inference()
+
+    typer.echo("Running inference...")
+    run_inference(
+        patches_dir=paths.test_reconstruction_patches / "images",
+        images_dir=paths.test_images,
+        models_dir=paths.models,
+        predictions_patch_level=paths.predictions_patch_level,
+        predictions_image_level=paths.predictions_image_level,
+    )
+    typer.echo("Inference complete!")
 
 
 if __name__ == "__main__":
