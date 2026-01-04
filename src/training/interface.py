@@ -37,6 +37,9 @@ def interface(
     psf_path: Annotated[
         Path, typer.Option(help="Path to PSF file for OURS augmentation")
     ] = None,
+    reproducibility: Annotated[
+        bool, typer.Option(help="Enable reproducibility by setting random seed")
+    ] = True,
 ):
     """Train a 3D segmentation model on microscopy patches.
 
@@ -47,9 +50,12 @@ def interface(
     paths = DatasetPaths(dataset_path)
     paths.validate_for_training()
 
-    # Enable reproducibility
-    logger.info(f"Setting random seed to {RANDOM_SEED}")
-    set_random_seed(RANDOM_SEED)
+    # Enable reproducibility if requested
+    if reproducibility:
+        logger.info(f"Setting random seed to {RANDOM_SEED}")
+        set_random_seed(RANDOM_SEED)
+    else:
+        logger.info("Reproducibility disabled")
 
     # Set PSF file if provided
     if psf_path and psf_path.exists():
