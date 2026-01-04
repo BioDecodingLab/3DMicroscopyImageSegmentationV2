@@ -38,7 +38,7 @@ Open your WSL terminal and run:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/hernanmorales-navarrete/3DMicroscopyImageSegmentationV2.git
+git clone https://github.com/BioDecodingLab/3DMicroscopyImageSegmentationV2.git
 cd 3DMicroscopyImageSegmentationV2
 
 # 2. Create conda environment
