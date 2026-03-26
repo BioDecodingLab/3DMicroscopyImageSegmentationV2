@@ -7,7 +7,7 @@ PATCH_SIZE = (64, 64, 64)
 PATCH_STEP = (64, 64, 64)
 
 MAX_WORKERS = 16  # Number of cores used in multiprocessing tasks
-THRESHOLD = 0.5  # Thresholding for
+THRESHOLD = 0.5  # Thresholding for binary segmentation
 
 # Intensity augmentation parameters
 INTENSITY_PARAMS = {

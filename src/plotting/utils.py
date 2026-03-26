@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 from sklearn.metrics import accuracy_score, f1_score, jaccard_score, precision_score, recall_score
-from tifffile import tifffile
+import tifffile
 
 from src.config import AVAILABLE_METRICS, MAX_WORKERS, OUTPUT_EXTENSION
 from src.inference.utils import apply_threshold_to_image_and_convert_to_dtype
