@@ -20,7 +20,8 @@ def interface(
 
     typer.echo("Running inference...")
     run_inference(
-        patches_dir=paths.test_reconstruction_patches / "images",
+        regular_patches_dir=paths.test_regular_patches / "images",
+        reconstruction_patches_dir=paths.test_reconstruction_patches / "images",
         images_dir=paths.test_images,
         models_dir=paths.models,
         predictions_patch_level=paths.predictions_patch_level,

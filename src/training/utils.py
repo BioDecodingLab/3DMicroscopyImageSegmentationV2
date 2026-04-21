@@ -3,7 +3,6 @@ import inspect
 from pathlib import Path
 import types
 
-import keras
 from loguru import logger
 from sklearn.model_selection import train_test_split
 import tensorflow
@@ -42,7 +41,7 @@ def configure_gpu():
 
 
 def set_random_seed(seed: int):
-    keras.utils.set_random_seed(seed)
+    tensorflow.keras.utils.set_random_seed(seed)
     tensorflow.config.experimental.enable_op_determinism()
 
 

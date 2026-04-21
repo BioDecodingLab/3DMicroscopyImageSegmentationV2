@@ -43,7 +43,9 @@ class ImageDataset(tf.keras.utils.PyDataset):
         self.mask_paths = mask_paths
         self.batch_size = batch_size
         self.augmentation = augmentation
-        self.intensity_params = intensity_params or INTENSITY_PARAMS
+        self.intensity_params = (
+            intensity_params if intensity_params is not None else INTENSITY_PARAMS
+        )
         self.augmentor = Augmentor(self.intensity_params)
 
         # Create standard augmentation pipeline for all cases
@@ -146,15 +148,3 @@ class ImageDataset(tf.keras.utils.PyDataset):
             masks.append(mask)
 
         return np.array(images), np.array(masks)
-
-
-# Example usage
-if __name__ == "__main__":
-    dataset = ImageDataset(
-        image_paths=["path/to/image1.tif", "path/to/image2.tif"],
-        mask_paths=["path/to/mask1.tif", "path/to/mask2.tif"],
-        batch_size=32,
-        workers=4,
-        use_multiprocessing=True,
-        max_queue_size=10,
-    )

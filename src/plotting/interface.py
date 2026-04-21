@@ -22,7 +22,9 @@ def interface(
     run_plotting(
         predictions_patch_level=paths.predictions_patch_level,
         predictions_image_level=paths.predictions_image_level,
-        ground_truth_patches_dir=paths.test_reconstruction_patches / "masks",
+        # Patch-level metrics evaluate on no-padding regular patches so comparisons
+        # aren't against reflection-padded ground truth.
+        ground_truth_patches_dir=paths.test_regular_patches / "masks",
         ground_truth_masks_dir=paths.test_masks,
         output_dir=paths.figures,
     )

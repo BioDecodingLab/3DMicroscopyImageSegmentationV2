@@ -38,10 +38,15 @@ def compute_padding_and_pad_image(
     patch_size: Tuple[int, int, int],
     step_size: Tuple[int, int, int],
 ) -> Tuple[NDArray[Any], NDArray[Any]]:
-    """Pad image and mask to be evenly divisible into patches."""
+    """Pad image and mask to be evenly divisible into patches.
+
+    The image is reflection-padded (reasonable approximation of signal near edges),
+    while the mask is zero-padded so we don't fabricate ground-truth foreground in
+    the padded region.
+    """
     padding_info = calculate_padding(image.shape, patch_size, step_size)
     padded_image = numpy.pad(image, padding_info, mode="reflect")
-    padded_mask = numpy.pad(mask, padding_info, mode="reflect")
+    padded_mask = numpy.pad(mask, padding_info, mode="constant", constant_values=0)
     return padded_image, padded_mask
 
 

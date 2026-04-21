@@ -210,6 +210,7 @@ class DatasetPaths:
     def validate_for_inference(self) -> None:
         """Check required directories exist for inference."""
         required = [
+            self.test_regular_patches / "images",
             self.test_reconstruction_patches / "images",
             self.test_images,
             self.models,
@@ -229,6 +230,7 @@ class DatasetPaths:
             self.predictions_patch_level,
             self.predictions_image_level,
             self.test_masks,
+            self.test_regular_patches / "masks",
         ]
         for path in required:
             if not path.exists():

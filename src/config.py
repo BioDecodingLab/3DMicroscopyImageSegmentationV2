@@ -14,12 +14,11 @@ INTENSITY_PARAMS = {
     "background_level": 0.1,  # Background intensity level
     "local_variation_scale": 5,  # Scale of local variations
     "z_decay_rate": 0.999,  # Rate of intensity decay along z-axis
-    "noise_std": 0.1,  # Standard deviation for Gaussian noise
     "poisson_scale": 1.0,  # Scaling factor for Poisson noise
-    "intensity_scale": 1000.0,  # Scale factor for image intensity before augmentation,
+    "intensity_scale": 1000.0,  # Scale factor for image intensity before augmentation
     "snr_tolerance": 0.1,  # Tolerance for SNR
     "max_iterations": 200,  # Maximum number of iterations for intensity augmentation
-    "std_dev": 10,  # Standard deviation for Gaussian noise
+    "std_dev": 10,  # Initial standard deviation for Gaussian noise (adapted iteratively)
     "snr_targets": [
         15,
         10,
@@ -61,9 +60,6 @@ EARLY_STOPPING_MIN_DELTA = 0  # Use Keras default
 CHECKPOINT_MONITOR = "val_loss"
 CHECKPOINT_MODE = "min"
 SAVE_BEST_ONLY = True
-CHECKPOINT_SAVE_FREQ = "epoch"
-CHECKPOINT_SAVE_WEIGHTS_ONLY = False
-CHECKPOINT_SAVE_FORMAT = "h5"  # or 'tf' for SavedModel format
 
 # Loss and metrics
 LOSS_FUNCTION = "binary_crossentropy"
@@ -71,4 +67,3 @@ METRICS = ["accuracy"]
 
 # Tensorboard
 TENSORBOARD_UPDATE_FREQ = "epoch"
-PROFILE_BATCH = 0  # Disable profiling

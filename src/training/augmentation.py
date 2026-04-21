@@ -83,10 +83,10 @@ class Augmentor:
         max_iterations: int,
     ) -> np.ndarray:
         """Generate an image with a target Signal-to-Noise Ratio (SNR)."""
-        iteration = 0
-        snr = 0
+        # Seed with the input so we return a valid image even if max_iterations == 0.
+        final_image = noisy_poisson_image
 
-        while iteration < max_iterations:
+        for _ in range(max_iterations):
             final_image = noisy_poisson_image + np.random.normal(
                 0, std_dev, noisy_poisson_image.shape
             )
@@ -102,8 +102,6 @@ class Augmentor:
                 std_dev *= 0.9
             else:
                 std_dev *= 1.1
-
-            iteration += 1
 
         return final_image
 
