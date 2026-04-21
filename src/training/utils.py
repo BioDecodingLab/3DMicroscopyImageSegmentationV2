@@ -85,26 +85,21 @@ def get_patch_paths_for_training(
     images_dir = patches_dir / "images"
     masks_dir = patches_dir / "masks"
 
-    # Collect paths for all allowed extensions (files only, not directories)
-    image_paths = []
-    mask_paths = []
-    for ext in ALLOWED_EXTENSIONS:
-        image_paths.extend(f for f in images_dir.rglob(f"*{ext}") if f.is_file())
-        mask_paths.extend(f for f in masks_dir.rglob(f"*{ext}") if f.is_file())
-
-    image_paths = sorted(image_paths)
-    mask_paths = sorted(mask_paths)
+    # Collect image paths once, then derive matching mask paths by relative path
+    # so image/mask pairs stay aligned even if one side has missing or extra files.
+    image_paths = sorted(
+        f for ext in ALLOWED_EXTENSIONS for f in images_dir.rglob(f"*{ext}") if f.is_file()
+    )
 
     if not image_paths:
         raise ValueError(f"No files with extensions {ALLOWED_EXTENSIONS} found in {images_dir}")
-    if not mask_paths:
-        raise ValueError(f"No files with extensions {ALLOWED_EXTENSIONS} found in {masks_dir}")
 
-    if len(image_paths) != len(mask_paths):
-        raise ValueError(
-            f"Number of images ({len(image_paths)}) does not match "
-            f"number of masks ({len(mask_paths)})"
-        )
+    mask_paths = [masks_dir / img.relative_to(images_dir) for img in image_paths]
+    missing = [str(m) for m in mask_paths if not m.is_file()]
+    if missing:
+        preview = ", ".join(missing[:5])
+        suffix = f" (+{len(missing) - 5} more)" if len(missing) > 5 else ""
+        raise FileNotFoundError(f"Missing mask patches: {preview}{suffix}")
 
     # Split the data
     train_image_paths, val_image_paths, train_mask_paths, val_mask_paths = train_test_split(

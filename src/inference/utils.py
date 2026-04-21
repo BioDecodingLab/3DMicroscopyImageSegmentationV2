@@ -40,7 +40,7 @@ def extract_patch_info_from_path(path: Path) -> ImageMetadata:
     """Extract information from patch path.
 
     Args:
-        filename: Patch filename (e.g. '.../image1_orig_512_512_128_pad_520_520_130_npatches_4_8_8_patch_0000.tif')
+        path: Patch file path (e.g. '.../image1_orig_512_512_128_pad_520_520_130_npatches_4_8_8_patch_0000.tif')
     """
     # Extract information using regex
     pattern = r"(.+)_orig_(\d+)_(\d+)_(\d+)(?:_pad_(\d+)_(\d+)_(\d+))?_npatches_(\d+)_(\d+)_(\d+)_patch_(\d+)\.tiff?"
@@ -73,7 +73,7 @@ def normalize_image_to_0_255(image: NDArray) -> NDArray[np.uint8]:
     return (normalize_image_to_0_1(image) * 255).astype(np.uint8)
 
 
-def apply_threshold_to_image_and_convert_to_dtype(image: NDArray, threshold: int, dtype):
+def apply_threshold_to_image_and_convert_to_dtype(image: NDArray, threshold: float, dtype):
     return (image > threshold).astype(dtype)
 
 
@@ -118,8 +118,8 @@ def apply_classical_thresholding_method_to_3D_image(image: NDArray, method: str)
 def save_mask_in_disk(mask: NDArray, output_dir: Path):
     try:
         tifffile.imwrite(output_dir, mask)
-    except Exception as e:
-        raise Exception(f"The mask {output_dir} couldn't be saved: {e}")
+    except OSError as e:
+        raise OSError(f"The mask {output_dir} couldn't be saved: {e}") from e
 
 
 # Create a single function to apply a thresholding method and save mask in order to execute it in a multiprocessing environment
@@ -158,7 +158,7 @@ def extract_information_from_model_dir_path(model_path: Path):
     parts = model_path.name.split("_")
 
     if len(parts) < 2:
-        raise Exception(
+        raise ValueError(
             f"Invalid model directory name format. Expected form 'model_name_augmentation', i.e., UNet3D_OURS, got {model_path.name}"
         )
 
@@ -188,15 +188,13 @@ def get_deep_learning_models_from_dir(
     """
 
     if not models_dir.exists():
-        raise Exception(f"Models directory doesn't exist: {models_dir}")
+        raise FileNotFoundError(f"Models directory doesn't exist: {models_dir}")
 
-    if any((dir.stem).split("_")[0] not in available_models for dir in models_dir.glob("*")):
-        raise Exception("Models' directory contains an invalid model")
+    if any(d.stem.split("_")[0] not in available_models for d in models_dir.glob("*")):
+        raise ValueError("Models' directory contains an invalid model")
 
-    if any(
-        (dir.stem).split("_")[1] not in available_augmentations for dir in models_dir.glob("*")
-    ):
-        raise Exception("Models' directory contains an invalid augmentation")
+    if any(d.stem.split("_")[1] not in available_augmentations for d in models_dir.glob("*")):
+        raise ValueError("Models' directory contains an invalid augmentation")
 
     models_list = []
 
@@ -207,7 +205,7 @@ def get_deep_learning_models_from_dir(
         timestamps = list(model_dir.glob("*/"))
 
         if not timestamps:
-            raise Exception(f"No timestamp directories in {model_dir}")
+            raise FileNotFoundError(f"No timestamp directories in {model_dir}")
 
         # Get most recent timestamp directory
         latest_timestamp_model = sorted(timestamps, key=lambda d: d.name)[-1]
@@ -215,7 +213,7 @@ def get_deep_learning_models_from_dir(
         # Get model files and check there's at least one .h5 model
         model_files = list(latest_timestamp_model.glob("*.h5"))
         if not model_files:
-            raise Exception(f"No .h5 model files in {latest_timestamp_model}")
+            raise FileNotFoundError(f"No .h5 model files in {latest_timestamp_model}")
 
         best_model_path = model_files[0]
         logger.info(f"Found {model_name}_{model_augmentation} at {best_model_path}")
@@ -244,16 +242,15 @@ def apply_deep_learning_model_to_batch(batch: list[NDArray], model, threshold: i
 
 
 def batch_iterable(iterable, n):
-    """
-    Implementation for batching iterables.
-    In Python 3.10, there's no itertools.batched()
+    """Batch an iterable into lists of size n.
 
-    >>> a = ['a.tiff', 'b.tiff', 'c.tiff', 'd.tiff']
-    >>> list(batch_iterable(e, 2))a
+    Python 3.10 doesn't ship itertools.batched(), so we implement it here.
+
+    >>> list(batch_iterable(['a.tiff', 'b.tiff', 'c.tiff', 'd.tiff'], 2))
     [['a.tiff', 'b.tiff'], ['c.tiff', 'd.tiff']]
     """
     if n < 1:
-        raise Exception("Batch should be greater than 1")
+        raise ValueError("Batch size should be at least 1")
     iterator = iter(iterable)
     while batch := list(itertools.islice(iterator, n)):
         yield batch
@@ -263,7 +260,7 @@ def reconstruct_image_from_patches_and_metadata(
     patches: list[NDArray], metadata: ImageMetadata, patch_size: tuple[int, int, int]
 ):
     if metadata.padded_shape is None:
-        raise Exception(
+        raise ValueError(
             "Image can't be reconstructed from regular patches, use reconstruction patches instead"
         )
 

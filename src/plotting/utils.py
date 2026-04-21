@@ -2,10 +2,10 @@ import concurrent.futures
 from pathlib import Path
 from typing import Dict, List
 
+from loguru import logger
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from loguru import logger
 from sklearn.metrics import accuracy_score, f1_score, jaccard_score, precision_score, recall_score
 from tifffile import tifffile
 
@@ -92,7 +92,12 @@ def plot_metrics_boxplots(df, save_path=None):
     available_metrics = [m for m in df.columns if m != "method"]
 
     n_metrics = len(available_metrics)
-    fig, axes = plt.subplots(3, 3, figsize=(15, 12))
+    if n_metrics == 0:
+        return
+
+    n_cols = min(3, n_metrics)
+    n_rows = (n_metrics + n_cols - 1) // n_cols
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 4 * n_rows), squeeze=False)
     axes = axes.flatten()
 
     for idx, metric in enumerate(available_metrics):
@@ -103,7 +108,7 @@ def plot_metrics_boxplots(df, save_path=None):
         ax.set_ylabel(metric)
         plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha="right")
 
-    for idx in range(n_metrics, 9):
+    for idx in range(n_metrics, len(axes)):
         fig.delaxes(axes[idx])
 
     plt.suptitle("")

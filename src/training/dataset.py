@@ -85,31 +85,34 @@ class ImageDataset(tf.keras.utils.PyDataset):
 
         return image, mask
 
-    def _load_3d_tif(self, path):
-        """Load and normalize a 3D TIF file.
+    def _load_3d_image(self, path):
+        """Load a 3D image TIF and min-max normalize it to [0, 1].
 
-        Args:
-            path: Path to the TIF file
-
-        Returns:
-            Normalized volume of shape (z, y, x, 1) with values in [0, 1]
+        Returns a float32 volume of shape (z, y, x, 1).
         """
-        # Read TIFF file using tifffile
         volume = tifffile.imread(str(path))
 
-        # Add channel dimension if not present
         if len(volume.shape) == 3:
             volume = volume[..., np.newaxis]
 
-        # Convert to float32
         volume = volume.astype(np.float32)
 
-        # Min-max normalization
         volume_min = np.min(volume)
         volume_max = np.max(volume)
-        volume_normalized = (volume - volume_min) / (volume_max - volume_min + np.finfo(float).eps)
+        return (volume - volume_min) / (volume_max - volume_min + np.finfo(float).eps)
 
-        return volume_normalized
+    def _load_3d_mask(self, path):
+        """Load a 3D mask TIF and binarize it to {0.0, 1.0}.
+
+        Min-max normalization would silently collapse uniform masks (all-zero
+        or all-foreground) to zeros, so masks are binarized directly instead.
+        """
+        volume = tifffile.imread(str(path))
+
+        if len(volume.shape) == 3:
+            volume = volume[..., np.newaxis]
+
+        return (volume > 0).astype(np.float32)
 
     def __len__(self):
         """Return the number of batches in the dataset."""
@@ -134,8 +137,8 @@ class ImageDataset(tf.keras.utils.PyDataset):
         masks = []
 
         for img_path, mask_path in zip(batch_image_paths, batch_mask_paths):
-            image = self._load_3d_tif(img_path)
-            mask = self._load_3d_tif(mask_path)
+            image = self._load_3d_image(img_path)
+            mask = self._load_3d_mask(mask_path)
 
             image, mask = self._augment_3d_patch(image, mask)
 

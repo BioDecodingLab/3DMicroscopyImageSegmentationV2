@@ -2,13 +2,11 @@ typer
 patchify
 loguru
 tifffile
-dotenv
 tensorflow[and-cuda]
 scikit-learn
 opencv-python
 scikit-image
 albumentations
 pandas
-seaborn
-notebook
+matplotlib
 tqdm

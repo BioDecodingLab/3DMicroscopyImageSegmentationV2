@@ -32,9 +32,11 @@ class Augmentor:
         return np.clip(convolved_image, 0, None)
 
     def simulate_local_variations(
-        self, shape: tuple, binnings: List[int] = [1, 2, 4, 8], scale: int = 5
+        self, shape: tuple, binnings: List[int] = None, scale: int = 5
     ) -> np.ndarray:
         """Simulate local variations in staining intensity."""
+        if binnings is None:
+            binnings = [1, 2, 4, 8]
         result = np.ones(shape)
         for binning in binnings:
             small_shape = tuple(dim // binning for dim in shape)
