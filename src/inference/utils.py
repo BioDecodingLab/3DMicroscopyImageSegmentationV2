@@ -32,7 +32,7 @@ class ImageMetadata:
     image_name: str
     original_shape: Tuple[int, int, int]
     padded_shape: Tuple[int, int, int] | None
-    number_of_patches: int
+    number_of_patches: Tuple[int, int, int]
     patch_id: int
 
 

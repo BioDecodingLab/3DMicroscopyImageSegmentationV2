@@ -10,6 +10,7 @@ def overwrite_and_create_directory(dir_path: Path) -> None:
     except FileExistsError:
         logger.info(f"Existing directory {dir_path}. Deleting it.")
         rmtree(dir_path)
+        dir_path.mkdir(parents=True)
 
 
 def create_directory(dir_path: Path) -> None:
