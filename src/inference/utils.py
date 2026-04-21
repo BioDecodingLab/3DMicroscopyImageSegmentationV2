@@ -102,14 +102,13 @@ def apply_frangi_to_3D_image(image: NDArray) -> NDArray:
     """Apply 3D Frangi vesselness + Otsu threshold to a 3D volume.
 
     skimage's frangi handles 3D natively, so we preserve z-axis context instead
-    of collapsing to per-slice 2D.
+    of collapsing to per-slice 2D. For a uniform Frangi response,
+    ``threshold_otsu`` returns that single value, which makes
+    ``normalized > otsu`` False everywhere — the correct "no vessels" result.
     """
     frangi_result = frangi(image.astype(np.float32))
     normalized = normalize_image_to_0_1(frangi_result)
-    try:
-        otsu = threshold_otsu(normalized)
-    except ValueError:
-        otsu = 0.5
+    otsu = threshold_otsu(normalized)
     return (normalized > otsu).astype(np.uint8)
 
 
