@@ -45,9 +45,12 @@ cd 3DMicroscopyImageSegmentationV2
 conda create -n img-seg python=3.10 -y
 conda activate img-seg
 
-# 3. Install dependencies
-pip install -r requirements.txt
+# 3. Install the project together with all its dependencies
+pip install -e .
 ```
+
+> All dependencies are declared in `pyproject.toml`, so `pip install -e .`
+> installs the project (in editable mode) **and** every dependency in one step.
 
 ---
 
