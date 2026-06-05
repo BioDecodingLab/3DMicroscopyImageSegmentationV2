@@ -1,14 +1,4 @@
-typer
-patchify
-loguru
-tifffile
-dotenv
-tensorflow[and-cuda]
-scikit-learn
-opencv-python
-scikit-image
-albumentations
-pandas
-seaborn
-notebook
-tqdm
+# Dependencies are declared in pyproject.toml (single source of truth).
+# This installs the project in editable mode together with all its dependencies,
+# so it is equivalent to running `pip install -e .`.
+-e .
