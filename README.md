@@ -159,9 +159,9 @@ Image-level evaluation has a **separate** setting:
 MAX_WORKERS_IMAGE_LEVEL = 1  # cores for image-level metrics
 ```
 
-It defaults to `1` on purpose: image-level metrics compare **full reconstructed images
-against full masks**, so each extra worker loads whole 3D volumes and memory use climbs
-fast. Only raise it if you have plenty of RAM.
+It defaults to `1` on purpose: comparing masks at the image level means comparing **whole
+images** (the predicted and ground-truth masks span the full volume), so each extra worker
+loads whole 3D volumes and memory use climbs fast. Only raise it if you have plenty of RAM.
 
 ---
 

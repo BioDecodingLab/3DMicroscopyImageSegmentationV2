@@ -169,9 +169,10 @@ def run_plotting(
     logger.info("Computing image-level metrics...")
     if MAX_WORKERS_IMAGE_LEVEL > 1:
         logger.warning(
-            f"MAX_WORKERS_IMAGE_LEVEL={MAX_WORKERS_IMAGE_LEVEL}: image-level metrics compare full "
-            "reconstructed images against full masks, so each worker holds whole 3D volumes in "
-            "memory and can use a LOT of RAM. Lower it to 1 if you hit out-of-memory errors."
+            f"MAX_WORKERS_IMAGE_LEVEL={MAX_WORKERS_IMAGE_LEVEL}: when comparing masks at the image "
+            "level you are comparing whole images (predicted mask vs ground-truth mask span the "
+            "full volume), so every worker holds whole 3D volumes in memory and can use a LOT of "
+            "RAM. Lower it to 1 if you hit out-of-memory errors."
         )
     image_results = []
     for method in predictions_image_level.glob("*"):
