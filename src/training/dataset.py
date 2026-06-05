@@ -70,6 +70,10 @@ class ImageDataset(tf.keras.utils.PyDataset):
 
         if self.augmentation == "OURS":
             image = self.augmentor.augment_patch_intensity(image, mask)
+            # The intensity simulation runs at physical scale (~intensity_scale) so the
+            # Poisson/SNR physics are meaningful; normalize the finished synthetic patch
+            # back to [0, 1] to match NONE/STANDARD loading and inference.
+            image = (image - image.min()) / (image.max() - image.min() + np.finfo(float).eps)
 
         if self.augmentation == "STANDARD" or self.augmentation == "OURS":
             # Remove channel dimension for Albumentations

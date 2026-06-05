@@ -45,9 +45,12 @@ cd 3DMicroscopyImageSegmentationV2
 conda create -n img-seg python=3.10 -y
 conda activate img-seg
 
-# 3. Install dependencies
-pip install -r requirements.txt
+# 3. Install the project together with all its dependencies
+pip install -e .
 ```
+
+> All dependencies are declared in `pyproject.toml`, so `pip install -e .`
+> installs the project (in editable mode) **and** every dependency in one step.
 
 ---
 
@@ -135,6 +138,30 @@ Create boxplot comparisons of all methods.
 ```bash
 python -m src.plotting.interface /path/to/my_dataset
 ```
+
+---
+
+## Configuration
+
+Pipeline settings live in [`src/config.py`](src/config.py). The most useful one is how many
+CPU cores to use for parallel work (patch generation and inference):
+
+```python
+MAX_WORKERS = 16  # number of CPU cores used in parallel
+```
+
+Set it to the number of cores you want to use, and **lower it (for example to `4`) if you
+run into out-of-memory errors** during patch generation or inference.
+
+Image-level evaluation has a **separate** setting:
+
+```python
+MAX_WORKERS_IMAGE_LEVEL = 1  # cores for image-level metrics
+```
+
+It defaults to `1` on purpose: comparing masks at the image level means comparing **whole
+images** (the predicted and ground-truth masks span the full volume), so each extra worker
+loads whole 3D volumes and memory use climbs fast. Only raise it if you have plenty of RAM.
 
 ---
 

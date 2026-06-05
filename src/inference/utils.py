@@ -30,6 +30,7 @@ class ImageMetadata:
     "Information necessary to reconstruct an image from patches"
 
     image_name: str
+    image_filename: str
     original_shape: Tuple[int, int, int]
     padded_shape: Tuple[int, int, int] | None
     number_of_patches: Tuple[int, int, int]
@@ -50,6 +51,10 @@ def extract_patch_info_from_path(path: Path) -> ImageMetadata:
         raise ValueError(f"Invalid patch filename format: {path}")
 
     image_name = match.group(1)
+    # The patch filename always ends in .tif; the source image's real extension survives
+    # only in the subdir named after it (images/<source filename>/...), so read the full
+    # source filename from there.
+    image_filename = path.parent.name
     orig_shape = (int(match.group(2)), int(match.group(3)), int(match.group(4)))
 
     # Get padded shape if it exists, otherwise use original shape
@@ -62,7 +67,9 @@ def extract_patch_info_from_path(path: Path) -> ImageMetadata:
 
     patch_id = int(match.group(11))
 
-    return ImageMetadata(image_name, orig_shape, padded_shape, n_patches, patch_id)
+    return ImageMetadata(
+        image_name, image_filename, orig_shape, padded_shape, n_patches, patch_id
+    )
 
 
 def normalize_image_to_0_1(image: NDArray):
@@ -332,11 +339,14 @@ def apply_deep_learning_method_to_array_of_filenames(
         for future in concurrent.futures.as_completed(futures):
             future.result()
 
-    # Use patches to reconstruct a single image and save it
+    # Use patches to reconstruct a single image and save it. Name the output after the source
+    # image (metadata.image_filename keeps the original extension) so it matches the classical
+    # predictions and the ground-truth masks, keeping image-level evaluation working for both
+    # .tif and .tiff.
     output_filename = (
         save_dir_for_complete_images_preditions
         / f"{model_name}_{model_augmentation}"
-        / (metadata.image_name + ".tif")
+        / metadata.image_filename
     )
     reconstructed_image = reconstruct_image_from_patches_and_metadata(
         predictions, metadata, patch_size

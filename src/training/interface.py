@@ -59,7 +59,15 @@ def interface(
         logger.info(f"PSF file activated: {psf_path}")
     else:
         INTENSITY_PARAMS.update({"use_psf": False})
-        logger.info("No PSF file provided")
+        if augmentation == "OURS":
+            reason = f"PSF path not found: {psf_path}" if psf_path else "No --psf-path provided"
+            logger.warning(
+                f"{reason}. OURS augmentation requires a PSF: without it, PSF convolution, "
+                "Gaussian noise, and SNR-target matching are SKIPPED, producing a degraded "
+                "augmentation. Pass --psf-path /path/to/PSF.tif to enable them."
+            )
+        else:
+            logger.info("No PSF file provided")
 
     # Get patch paths from nested structure
     train_image_paths, val_image_paths, train_mask_paths, val_mask_paths = (
