@@ -9,7 +9,7 @@ from loguru import logger
 from sklearn.metrics import accuracy_score, f1_score, jaccard_score, precision_score, recall_score
 from tifffile import tifffile
 
-from src.config import AVAILABLE_METRICS, MAX_WORKERS, OUTPUT_EXTENSION
+from src.config import AVAILABLE_METRICS, MAX_WORKERS, MAX_WORKERS_IMAGE_LEVEL, OUTPUT_EXTENSION
 from src.inference.utils import apply_threshold_to_image_and_convert_to_dtype
 
 
@@ -167,11 +167,17 @@ def run_plotting(
 
     # Plot image-level metrics
     logger.info("Computing image-level metrics...")
+    if MAX_WORKERS_IMAGE_LEVEL > 1:
+        logger.warning(
+            f"MAX_WORKERS_IMAGE_LEVEL={MAX_WORKERS_IMAGE_LEVEL}: image-level metrics compare full "
+            "reconstructed images against full masks, so each worker holds whole 3D volumes in "
+            "memory and can use a LOT of RAM. Lower it to 1 if you hit out-of-memory errors."
+        )
     image_results = []
     for method in predictions_image_level.glob("*"):
         if not method.is_dir():
             continue
-        with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=MAX_WORKERS_IMAGE_LEVEL) as executor:
             futures = [
                 executor.submit(
                     read_and_compute_metrics,

@@ -141,6 +141,30 @@ python -m src.plotting.interface /path/to/my_dataset
 
 ---
 
+## Configuration
+
+Pipeline settings live in [`src/config.py`](src/config.py). The most useful one is how many
+CPU cores to use for parallel work (patch generation and inference):
+
+```python
+MAX_WORKERS = 16  # number of CPU cores used in parallel
+```
+
+Set it to the number of cores you want to use, and **lower it (for example to `4`) if you
+run into out-of-memory errors** during patch generation or inference.
+
+Image-level evaluation has a **separate** setting:
+
+```python
+MAX_WORKERS_IMAGE_LEVEL = 1  # cores for image-level metrics
+```
+
+It defaults to `1` on purpose: image-level metrics compare **full reconstructed images
+against full masks**, so each extra worker loads whole 3D volumes and memory use climbs
+fast. Only raise it if you have plenty of RAM.
+
+---
+
 ## Output Structure
 
 After running all steps, your dataset will contain:

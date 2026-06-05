@@ -7,6 +7,9 @@ PATCH_SIZE = (64, 64, 64)
 PATCH_STEP = (64, 64, 64)
 
 MAX_WORKERS = 16  # Number of cores used in multiprocessing tasks
+# Cores for image-level metrics (full reconstructed image vs full mask). Kept at 1 by
+# default: each worker loads whole 3D volumes, so values > 1 can use a LOT of memory.
+MAX_WORKERS_IMAGE_LEVEL = 1
 THRESHOLD = 0.5  # Thresholding for
 
 # Intensity augmentation parameters
