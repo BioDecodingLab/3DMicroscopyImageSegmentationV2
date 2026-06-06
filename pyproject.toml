@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "src"
-version = "2.1.0"
+version = "2.1.1"
 description = "Deep learning segmentation of tubular structures in 3D microscopy images."
 authors = [
   { name = "Your name (or your organization/company/team)" },
