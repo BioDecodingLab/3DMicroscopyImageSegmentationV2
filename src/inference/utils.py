@@ -21,6 +21,7 @@ from src.config import (
     BATCH_SIZE,
     MAX_WORKERS,
     PATCH_SIZE,
+    THRESHOLD,
 )
 from src.utils import create_directory, overwrite_and_create_directory
 
@@ -318,7 +319,9 @@ def apply_deep_learning_method_to_array_of_filenames(
         batch_of_patches = map(tifffile.imread, batch_of_filenames)
 
         # Predict batch
-        prediction_of_batch = apply_deep_learning_model_to_batch(batch_of_patches, model, 0.5)
+        prediction_of_batch = apply_deep_learning_model_to_batch(
+            batch_of_patches, model, THRESHOLD
+        )
 
         # Add prediction of batch to predictions
         predictions.extend(prediction_of_batch)
