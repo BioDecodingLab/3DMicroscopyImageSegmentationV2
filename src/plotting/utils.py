@@ -2,10 +2,10 @@ import concurrent.futures
 from pathlib import Path
 from typing import Dict, List
 
+from loguru import logger
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from loguru import logger
 from sklearn.metrics import accuracy_score, f1_score, jaccard_score, precision_score, recall_score
 from tifffile import tifffile
 
@@ -178,7 +178,9 @@ def run_plotting(
     for method in predictions_image_level.glob("*"):
         if not method.is_dir():
             continue
-        with concurrent.futures.ProcessPoolExecutor(max_workers=MAX_WORKERS_IMAGE_LEVEL) as executor:
+        with concurrent.futures.ProcessPoolExecutor(
+            max_workers=MAX_WORKERS_IMAGE_LEVEL
+        ) as executor:
             futures = [
                 executor.submit(
                     read_and_compute_metrics,

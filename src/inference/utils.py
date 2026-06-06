@@ -68,9 +68,7 @@ def extract_patch_info_from_path(path: Path) -> ImageMetadata:
 
     patch_id = int(match.group(11))
 
-    return ImageMetadata(
-        image_name, image_filename, orig_shape, padded_shape, n_patches, patch_id
-    )
+    return ImageMetadata(image_name, image_filename, orig_shape, padded_shape, n_patches, patch_id)
 
 
 def normalize_image_to_0_1(image: NDArray):
