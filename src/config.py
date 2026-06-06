@@ -11,7 +11,9 @@ MAX_WORKERS = 16  # Number of cores used in multiprocessing tasks
 # images, so each worker holds whole 3D volumes in memory and values > 1 can use a LOT of
 # memory. Kept at 1 by default.
 MAX_WORKERS_IMAGE_LEVEL = 1
-THRESHOLD = 0.5  # Thresholding for
+# General threshold applied to model probability outputs to produce binary masks
+# (values > THRESHOLD become foreground). Used across deep-learning inference.
+THRESHOLD = 0.5
 
 # Intensity augmentation parameters
 INTENSITY_PARAMS = {
